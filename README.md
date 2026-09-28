@@ -212,6 +212,10 @@ Both files must stay in sync when you change this list: `server/constants.js` an
 
 ## Deployment notes
 
+**Deploying the API to Render? Read [DEPLOYMENT.md](DEPLOYMENT.md) first** — it covers the one thing
+that breaks most Render deploys (there is no install step; the Build Command *is* the install), plus
+port binding, CORS, and frontend wiring.
+
 - Serve `client/dist` from any static host and set `VITE_API_URL` to the public API origin before building.
 - The API is stateless, so run as many instances as you like behind a load balancer.
 - `POST /api/auth/login` is rate limited to 20 attempts per 15 minutes per IP (disabled under `NODE_ENV=test`).

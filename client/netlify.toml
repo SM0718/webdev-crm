@@ -1,0 +1,16 @@
+# Netlify build configuration.
+# Kept in the repo so the build cannot silently drift: Vite inlines
+# import.meta.env.* at BUILD time, so VITE_API_URL must be set here or in
+# the Netlify UI, never after the fact.
+
+[build]
+  base = "client"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # Public API origin, including the /api prefix the server mounts at.
+  # Without this the bundle falls back to the relative "/api" and requests
+  # go to the Netlify origin instead of Render.
+  VITE_API_URL = "https://webdev-crm.onrender.com/api"
+  NODE_VERSION = "22"
