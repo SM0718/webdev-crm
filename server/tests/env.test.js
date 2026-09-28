@@ -8,7 +8,17 @@ process.env.JWT_SECRET = 'test_secret_value';
 process.env.ADMIN_USERNAME = 'admin';
 process.env.ADMIN_PASSWORD = 'adminPass123';
 
-const { buildAtlasUri } = await import('../src/env.js');
+const { buildAtlasUri, env } = await import('../src/env.js');
+
+test('normalises the CORS allow-list', () => {
+  const { CLIENT_URLS } = env;
+  assert.ok(Array.isArray(CLIENT_URLS));
+  for (const origin of CLIENT_URLS) {
+    assert.equal(origin, origin.trim(), 'no surrounding whitespace');
+    assert.ok(!origin.endsWith('/'), 'no trailing slash, or the browser Origin header will not match');
+    assert.ok(!origin.includes(','), 'entries are split apart');
+  }
+});
 
 test('injects credentials, database name and write concern', () => {
   const uri = buildAtlasUri({

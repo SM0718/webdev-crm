@@ -108,15 +108,61 @@ function resolveMongoUri(cfg) {
   return { uri: cfg.MONGO_URI, source: 'MONGO_URI' };
 }
 
+/**
+ * Normalises the comma-separated CLIENT_URL allow-list.
+ *
+ * The browser sends `Origin: https://app.example.com` - scheme and host only,
+ * never a trailing slash or a path. Matching is exact, so a value pasted with
+ * a trailing slash silently never matches and every browser request fails with
+ * a CORS error the page reports only as "Network Error". Strip it here instead.
+ */
+function resolveAllowedOrigins(value) {
+  return [
+    ...new Set(
+      String(value ?? '')
+        .split(',')
+        .map((url) => url.trim().replace(/\/+$/, ''))
+        .filter(Boolean),
+    ),
+  ];
+}
+
 const resolved = resolveMongoUri(config);
+const allowedOrigins = resolveAllowedOrigins(config.CLIENT_URL);
 
 if (config.NODE_ENV === 'production' && config.JWT_SECRET === 'change_me_to_a_long_random_string') {
   console.error('[env] Refusing to boot in production with the example JWT_SECRET.');
   process.exit(1);
 }
 
+if (config.NODE_ENV === 'production') {
+  const isLocal = (origin) => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin);
+
+  if (allowedOrigins.length === 0) {
+    console.error(
+      '[env] CLIENT_URL is empty in production, so every browser request will be blocked by CORS.\n' +
+        '      Set it to the deployed frontend origin, e.g. https://your-app.netlify.app',
+    );
+    process.exit(1);
+  }
+
+  if (allowedOrigins.every(isLocal)) {
+    console.error(
+      `[env] CLIENT_URL only allows local origins (${allowedOrigins.join(', ')}) while running in\n` +
+        '      production, so the deployed frontend will be blocked by CORS. Add its real origin.\n' +
+        '      (It looks like CLIENT_URL is unset and the http://localhost:5173 default is in use.)',
+    );
+    process.exit(1);
+  }
+}
+
 if (!resolved.uri.includes('mongodb+srv://') && !/:\/\/[^@]*@/.test(resolved.uri)) {
   console.warn(`[env] Connecting with a local/unauthenticated MongoDB string via ${resolved.source}.`);
 }
 
-export const env = { ...config, MONGO_URI: resolved.uri, MONGO_SOURCE: resolved.source };
+export const env = {
+  ...config,
+  MONGO_URI: resolved.uri,
+  MONGO_SOURCE: resolved.source,
+  CLIENT_URLS: allowedOrigins,
+};

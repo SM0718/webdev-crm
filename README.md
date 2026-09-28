@@ -71,7 +71,7 @@ If `MONGODB_URI` is absent the server falls back to `MONGO_URI` (a plain `mongod
 | `ADMIN_NAME`                            | Seeded admin display name                                    |
 | `ADMIN_EMAIL`                           | Seeded admin email                                           |
 | `ADMIN_PASSWORD`                        | Seeded admin password (min. 8 chars)                         |
-| `CLIENT_URL`                            | Comma-separated list of allowed CORS origins                 |
+| `CLIENT_URL` | Comma-separated list of allowed CORS origins (no trailing slashes). Required in production |
 
 The server refuses to start in `production` while `JWT_SECRET` still holds the example value. On boot it logs
 which variable supplied the connection string and redacts the password from that log line.

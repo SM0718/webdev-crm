@@ -10,13 +10,11 @@ const app = express();
 
 app.set('trust proxy', 1);
 
-/* Exact-match list, so a stale CLIENT_URL silently blocks a deployed site
-   and the browser only reports a generic CORS failure. Log it at boot. */
-const allowedOrigins = env.CLIENT_URL.split(',').map((url) => url.trim()).filter(Boolean);
-
+/* Normalised list (trailing slashes stripped, blanks dropped) built in env.js.
+   Matching is exact because credentials are enabled, so `*` is not an option. */
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: env.CLIENT_URLS,
     credentials: true,
   }),
 );
@@ -31,9 +29,7 @@ app.use(errorHandler);
 
 // Browsers hide CORS rejections behind "Network Error", so make the real
 // allow-list visible in the deploy logs.
-if (env.NODE_ENV === 'production') {
-  console.log(`[cors] allowed origins: ${allowedOrigins.join(', ') || '(none - every browser request will fail)'}`);
-}
+console.log(`[cors] allowed origins: ${env.CLIENT_URLS.join(', ') || '(none)'}`);
 
 export { app, mongoose };
 export default app;
