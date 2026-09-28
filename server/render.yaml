@@ -4,8 +4,8 @@ services:
     runtime: node
     plan: free
     rootDir: server
-    buildCommand: npm ci
-    startCommand: npm start
+    buildCommand: pnpm install --frozen-lockfile
+    startCommand: pnpm start
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
