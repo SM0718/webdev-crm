@@ -6,7 +6,7 @@
   "description": "Lead CRM backend for a web development agency (MERN)",
   "main": "src/index.js",
   "scripts": {
-    "build": "node scripts/build.js",
+    "build": "pnpm install --frozen-lockfile && node scripts/build.js",
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "test": "node --test tests/*.test.js"

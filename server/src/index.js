@@ -8,7 +8,7 @@ async function bootstrap() {
     await connectDatabase();
     await seedAdminOnBoot();
 
-    const server = app.listen(env.PORT, () => {
+    const server = app.listen(env.PORT, '0.0.0.0', () => {
       console.log(`[api] listening on http://localhost:${env.PORT} (${env.NODE_ENV})`);
     });
 
