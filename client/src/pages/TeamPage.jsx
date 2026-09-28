@@ -10,6 +10,7 @@ import api, { toMessage } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/context/AuthContext';
 import { initialsOf, relativeTime } from '@/lib/format';
+import { USERNAME_MAX, USERNAME_MESSAGE, USERNAME_MIN, USERNAME_PATTERN } from '@/lib/constants';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,7 +44,12 @@ const PASSWORD_SCHEMA = z
 
 const memberSchema = z.object({
   name: z.string().trim().min(2, 'Enter the full name').max(80, 'Keep the name short'),
-  email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
+  username: z
+    .string()
+    .trim()
+    .min(USERNAME_MIN, `Use at least ${USERNAME_MIN} characters`)
+    .max(USERNAME_MAX, `Keep it under ${USERNAME_MAX} characters`)
+    .regex(USERNAME_PATTERN, USERNAME_MESSAGE),
   password: PASSWORD_SCHEMA,
 });
 
@@ -62,7 +68,7 @@ export default function TeamPage() {
 
   const counts = data?.counts ?? {};
   const convertedBy = useMemo(
-    () => new Map((data?.topPerformers ?? []).map((row) => [row.email, row.count])),
+    () =>     new Map((data?.topPerformers ?? []).map((row) => [row.username, row.count])),
     [data?.topPerformers],
   );
 
@@ -156,7 +162,7 @@ export default function TeamPage() {
                           </Avatar>
                           <div className="min-w-0">
                             <p className="truncate text-sm font-medium group-hover:text-primary">{person.name}</p>
-                            <p className="truncate text-[11px] text-muted-foreground">{person.email}</p>
+                            <p className="truncate text-[11px] text-muted-foreground">{person.username}</p>
                           </div>
                         </div>
                       </TableCell>
@@ -167,7 +173,7 @@ export default function TeamPage() {
                       </TableCell>
                       <TableCell className="nums">{person.assignedCount ?? 0}</TableCell>
                       <TableCell className="nums">{person.contacted ?? 0}</TableCell>
-                      <TableCell className="nums">{convertedBy.get(person.email) ?? person.converted ?? 0}</TableCell>
+                      <TableCell className="nums">{convertedBy.get(person.username) ?? person.converted ?? 0}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{relativeTime(person.createdAt)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1" onClick={(event) => event.stopPropagation()}>
@@ -271,7 +277,7 @@ function InviteDialog({ open, onOpenChange, onCreated }) {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(memberSchema),
-    defaultValues: { name: '', email: '', password: '' },
+    defaultValues: { name: '', username: '', password: '' },
   });
 
   const onSubmit = async (values) => {
@@ -330,16 +336,25 @@ function InviteDialog({ open, onOpenChange, onCreated }) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="member-email">Email</Label>
+            <Label htmlFor="member-username">Username</Label>
             <Input
-              id="member-email"
-              type="email"
-              placeholder="priya@agency.com"
+              id="member-username"
+              type="text"
+              placeholder="priya.sharma"
               autoComplete="off"
-              aria-invalid={Boolean(errors.email)}
-              {...register('email')}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              aria-invalid={Boolean(errors.username)}
+              {...register('username')}
             />
-            {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+            {errors.username ? (
+              <p className="text-xs text-destructive">{errors.username.message}</p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">
+                Their sign-in handle. Must be unique across the team.
+              </p>
+            )}
           </div>
 
           <div className="space-y-1.5">

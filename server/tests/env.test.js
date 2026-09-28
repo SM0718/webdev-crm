@@ -5,7 +5,7 @@ import { test } from 'node:test';
 process.env.NODE_ENV = 'test';
 process.env.MONGO_URI = 'mongodb://127.0.0.1:27017/webdev-crm';
 process.env.JWT_SECRET = 'test_secret_value';
-process.env.ADMIN_EMAIL = 'admin@example.com';
+process.env.ADMIN_USERNAME = 'admin';
 process.env.ADMIN_PASSWORD = 'adminPass123';
 
 const { buildAtlasUri } = await import('../src/env.js');

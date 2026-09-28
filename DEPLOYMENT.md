@@ -110,7 +110,7 @@ Required:
 | `MONGODB_USERNAME` / `MONGODB_PASSWORD` | Atlas credentials, injected into the URI |
 | `MONGODB_DB` | `webdev-crm` |
 | `JWT_SECRET` | Must not equal the example value; `server/src/env.js` refuses to boot otherwise |
-| `ADMIN_NAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Seeded on first boot |
+| `ADMIN_NAME` / `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Seeded on first boot |
 | `CLIENT_URL` | CORS allowlist, comma-separated — see section 6 |
 
 MongoDB Atlas must also allow Render's egress IPs. Confirm with `0.0.0.0/0` while debugging, then
@@ -165,7 +165,33 @@ The browser then only ever talks to `localhost:5173`, so CORS never applies in d
 the Vite dev server after changing this** — `loadEnv` runs once at config load, and HMR will not pick
 it up.
 
-## 8. Free-plan behaviour
+## 8. Upgrading from email logins to usernames
+
+Accounts used to sign in with an email address. The `email` field was renamed to `username`, so a database
+that still holds `email` values must be converted before (or immediately after) you deploy the new build.
+Passwords, roles and ids are untouched, so nobody has to reset anything.
+
+Always preview first — the script defaults to a dry run:
+
+```bash
+cd server
+npm run migrate-username                 # prints the email -> username plan, changes nothing
+npm run migrate-username -- --confirm    # applies it
+```
+
+It derives the handle from the local part of the address (`admin@webdevcrm.com` becomes `admin`), drops any
+characters the rules disallow, and appends `-2`, `-3` … if two people would land on the same handle. It also
+drops the old `email_1` index, which would otherwise reject the second account once the field is gone, and
+rebuilds the unique index on `username`.
+
+Order matters: run the migration **before** deploying, or immediately after. In the gap the old build cannot
+find the admin, and in the gap after deploying the new build nobody can log in until the migration has run.
+The script is idempotent, so re-running it is harmless.
+
+If the admin account is renamed here, set `ADMIN_USERNAME` on Render to match the new handle so the seeded
+account and the environment agree.
+
+## 9. Free-plan behaviour
 
 Render's Free plan sleeps the service after ~15 minutes idle. Cold starts take 30–60s here because
 the Atlas connect and admin seed both run before `listen`. The first request after idle can exceed

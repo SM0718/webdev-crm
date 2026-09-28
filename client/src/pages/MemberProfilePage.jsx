@@ -179,7 +179,7 @@ export default function MemberProfilePage() {
                 <Badge variant="destructive">Deactivated</Badge>
               )}
             </div>
-            <p className="mt-0.5 text-xs text-muted-foreground">{member.email}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{member.username}</p>
             <p className="mt-1 text-[11px] text-muted-foreground">
               Joined {relativeTime(member.createdAt)} · {member.conversionRate}% conversion
             </p>

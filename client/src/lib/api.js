@@ -1,13 +1,13 @@
-import axios from 'axios';
+import axios from "axios";
 
-export const TOKEN_KEY = 'webdev-crm.token';
+export const TOKEN_KEY = "webdev-crm.token";
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const setToken = (token) => localStorage.setItem(TOKEN_KEY, token);
 export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? '/api',
+  baseURL: import.meta.env.VITE_API_URL ?? "/api",
   timeout: 30000,
 });
 
@@ -27,7 +27,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
-    const isAuthRoute = error.config?.url?.includes('/auth/login');
+    const isAuthRoute = error.config?.url?.includes("/auth/login");
 
     if (status === 401 && !isAuthRoute) {
       clearToken();
@@ -38,12 +38,16 @@ api.interceptors.response.use(
 );
 
 /** Turns any axios/zod failure into a single readable sentence. */
-export function toMessage(error, fallback = 'Something went wrong.') {
+export function toMessage(error, fallback = "Something went wrong.") {
   return (
     error?.response?.data?.message ??
     error?.response?.data?.error ??
-    (error?.code === 'ECONNABORTED' ? 'The server took too long to respond.' : null) ??
-    (error?.message === 'Network Error' ? 'Cannot reach the server. Is the API running on port 5000?' : null) ??
+    (error?.code === "ECONNABORTED"
+      ? "The server took too long to respond."
+      : null) ??
+    (error?.message === "Network Error"
+      ? "Cannot reach the server. Is the API running on port 5000?"
+      : null) ??
     error?.message ??
     fallback
   );
@@ -53,14 +57,17 @@ export function toMessage(error, fallback = 'Something went wrong.') {
  * Downloads a binary response (the lead PDF) as a file. A plain `window.open`
  * cannot be used here because the token lives in localStorage, not a cookie.
  */
-export async function downloadFile(path, fallbackName = 'download') {
-  const response = await api.get(path, { responseType: 'blob', timeout: 60000 });
+export async function downloadFile(path, fallbackName = "download") {
+  const response = await api.get(path, {
+    responseType: "blob",
+    timeout: 60000,
+  });
 
-  const disposition = response.headers?.['content-disposition'] ?? '';
+  const disposition = response.headers?.["content-disposition"] ?? "";
   const fromHeader = /filename="?([^";]+)"?/i.exec(disposition)?.[1];
 
   const blobUrl = URL.createObjectURL(response.data);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = blobUrl;
   link.download = fromHeader || fallbackName;
   document.body.appendChild(link);

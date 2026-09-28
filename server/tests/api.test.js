@@ -7,7 +7,7 @@ import request from 'supertest';
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test_secret_value_123';
 process.env.ADMIN_NAME = 'Test Admin';
-process.env.ADMIN_EMAIL = 'admin@test.com';
+process.env.ADMIN_USERNAME = 'admin';
 process.env.ADMIN_PASSWORD = 'Admin@12345';
 process.env.MONGO_URI = 'mongodb://127.0.0.1:27017/webdev-crm-test';
 
@@ -37,34 +37,34 @@ after(async () => {
 beforeEach(async () => {
   await Promise.all([Lead.deleteMany({}), User.deleteMany({ role: 'member' })]);
 
-  const admin = await request(app).post('/api/auth/login').send({ email: 'admin@test.com', password: 'Admin@12345' });
+  const admin = await request(app).post('/api/auth/login').send({ username: 'admin', password: 'Admin@12345' });
   assert.equal(admin.status, 200, JSON.stringify(admin.body));
   adminToken = admin.body.token;
 
   const member = await User.create({
     name: 'Rahul',
-    email: 'rahul@test.com',
+    username: 'rahul',
     passwordHash: await hashPassword('Member@12345'),
     role: 'member',
   });
   memberId = member._id.toString();
-  const login = await request(app).post('/api/auth/login').send({ email: 'rahul@test.com', password: 'Member@12345' });
+  const login = await request(app).post('/api/auth/login').send({ username: 'rahul', password: 'Member@12345' });
   memberToken = login.body.token;
 });
 
 /* ---------------------------------------------------------------------- auth */
 
 test('POST /api/auth/login rejects a bad password with a generic message', async () => {
-  const res = await request(app).post('/api/auth/login').send({ email: 'admin@test.com', password: 'wrong-password' });
+  const res = await request(app).post('/api/auth/login').send({ username: 'admin', password: 'wrong-password' });
   assert.equal(res.status, 401);
-  assert.match(res.body.message, /Incorrect email or password/i);
+  assert.match(res.body.message, /Incorrect username or password/i);
 });
 
 test('POST /api/auth/login validates the payload', async () => {
-  const res = await request(app).post('/api/auth/login').send({ email: 'nope', password: '' });
+  const res = await request(app).post('/api/auth/login').send({ username: 'not a handle', password: '' });
   assert.equal(res.status, 400);
   assert.equal(res.body.success, false);
-  assert.ok(res.body.details.length >= 2);
+  assert.ok(res.body.details.length >= 2, 'both the username format and the password are reported');
 });
 
 test('GET /api/auth/me returns the session user', async () => {
@@ -488,35 +488,71 @@ test('admin creates, toggles and re-passwords a member', async () => {
   const created = await request(app)
     .post('/api/team')
     .set('Authorization', `Bearer ${adminToken}`)
-    .send({ name: 'Priya', email: 'Priya@Test.com', password: 'Member@12345' });
+    .send({ name: 'Priya', username: 'Priya.Test', password: 'Member@12345' });
   assert.equal(created.status, 201);
-  assert.equal(created.body.user.email, 'priya@test.com', 'email is lowercased');
+  assert.equal(created.body.user.username, 'priya.test', 'username is lowercased');
 
   const dup = await request(app)
     .post('/api/team')
     .set('Authorization', `Bearer ${adminToken}`)
-    .send({ name: 'Priya 2', email: 'priya@test.com', password: 'Member@12345' });
+    .send({ name: 'Priya 2', username: 'Priya.Test', password: 'Member@12345' });
   assert.equal(dup.status, 409);
 
   const short = await request(app)
     .post('/api/team')
     .set('Authorization', `Bearer ${adminToken}`)
-    .send({ name: 'Short', email: 'short@test.com', password: 'abc' });
+    .send({ name: 'Short', username: 'shorty', password: 'abc' });
   assert.equal(short.status, 400);
 
   const off = await request(app).patch(`/api/team/${created.body.user.id}/toggle`).set('Authorization', `Bearer ${adminToken}`);
   assert.equal(off.body.user.isActive, false);
 
-  const blocked = await request(app).post('/api/auth/login').send({ email: 'priya@test.com', password: 'Member@12345' });
+  const blocked = await request(app).post('/api/auth/login').send({ username: 'Priya.Test', password: 'Member@12345' });
   assert.equal(blocked.status, 403, 'a deactivated member cannot sign in');
 
   await request(app).patch(`/api/team/${created.body.user.id}/password`).set('Authorization', `Bearer ${adminToken}`).send({ password: 'BrandNew@123' });
-  const relogin = await request(app).post('/api/auth/login').send({ email: 'priya@test.com', password: 'BrandNew@123' });
+  const relogin = await request(app).post('/api/auth/login').send({ username: 'Priya.Test', password: 'BrandNew@123' });
   assert.equal(relogin.status, 403, 'still deactivated');
 
   await request(app).patch(`/api/team/${created.body.user.id}/toggle`).set('Authorization', `Bearer ${adminToken}`);
-  const finalLogin = await request(app).post('/api/auth/login').send({ email: 'priya@test.com', password: 'BrandNew@123' });
-  assert.equal(finalLogin.status, 200);
+  const finalLogin = await request(app).post('/api/auth/login').send({ username: 'Priya.Test', password: 'BrandNew@123' });
+  assert.equal(finalLogin.status, 200, 'login is case-insensitive on the username');
+});
+
+test('usernames are rejected when they break the handle rules', async () => {
+  const bad = [
+    ['ab', 'too short'],
+    ['has space', 'contains a space'],
+    ['@leading', 'starts with a symbol'],
+    ['a'.repeat(31), 'over 30 characters'],
+  ];
+
+  for (const [username, why] of bad) {
+    const res = await request(app)
+      .post('/api/team')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'Edge Case', username, password: 'Member@12345' });
+    assert.equal(res.status, 400, `rejects ${JSON.stringify(username)} (${why})`);
+  }
+
+  const good = await request(app)
+    .post('/api/team')
+    .set('Authorization', `Bearer ${adminToken}`)
+    .send({ name: 'Valid Handle', username: 'a.b_c-d9', password: 'Member@12345' });
+  assert.equal(good.status, 201, 'accepts dot, underscore and hyphen');
+});
+
+test('a taken username is rejected regardless of letter case', async () => {
+  await request(app)
+    .post('/api/team')
+    .set('Authorization', `Bearer ${adminToken}`)
+    .send({ name: 'Case Test', username: 'MixedCase', password: 'Member@12345' });
+
+  const dup = await request(app)
+    .post('/api/team')
+    .set('Authorization', `Bearer ${adminToken}`)
+    .send({ name: 'Case Test 2', username: 'mixedcase', password: 'Member@12345' });
+  assert.equal(dup.status, 409);
 });
 
 test('the admin account cannot be deactivated', async () => {

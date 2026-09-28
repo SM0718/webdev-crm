@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 
+import { USERNAME_MAX, USERNAME_MESSAGE, USERNAME_MIN, USERNAME_PATTERN } from '../constants.js';
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -8,13 +10,15 @@ const userSchema = new mongoose.Schema(
       trim: true,
       maxlength: [80, 'Name cannot exceed 80 characters'],
     },
-    email: {
+    username: {
       type: String,
-      required: [true, 'Email is required'],
+      required: [true, 'Username is required'],
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please provide a valid email address'],
+      minlength: [USERNAME_MIN, `Username must be at least ${USERNAME_MIN} characters`],
+      maxlength: [USERNAME_MAX, `Username cannot exceed ${USERNAME_MAX} characters`],
+      match: [USERNAME_PATTERN, USERNAME_MESSAGE],
     },
     passwordHash: {
       type: String,
@@ -43,7 +47,7 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
   return {
     id: this._id.toString(),
     name: this.name,
-    email: this.email,
+    username: this.username,
     role: this.role,
     isActive: this.isActive,
     createdAt: this.createdAt,

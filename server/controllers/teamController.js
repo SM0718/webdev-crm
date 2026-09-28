@@ -43,7 +43,7 @@ export const listTeam = asyncHandler(async (req, res) => {
     return {
       id: account._id,
       name: account.name,
-      email: account.email,
+      username: account.username,
       role: account.role,
       isActive: account.isActive,
       createdAt: account.createdAt,
@@ -75,14 +75,14 @@ export const listTeam = asyncHandler(async (req, res) => {
 });
 
 export const createMember = asyncHandler(async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, username, password, role } = req.body;
 
-  const existing = await User.findOne({ email });
-  if (existing) throw ApiError.conflict('A user with that email already exists.');
+  const existing = await User.findOne({ username });
+  if (existing) throw ApiError.conflict('That username is already taken.');
 
   const member = await User.create({
     name,
-    email,
+    username,
     passwordHash: await hashPassword(password),
     role,
     isActive: true,

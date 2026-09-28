@@ -153,7 +153,7 @@ export default function DashboardPage() {
             ) : (
               <ol className="space-y-2.5">
                 {topPerformers.map((performer, index) => (
-                  <li key={performer.email} className="flex items-center gap-3">
+                    <li key={performer.username} className="flex items-center gap-3">
                     <span className="nums flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">
                       {index + 1}
                     </span>

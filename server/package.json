@@ -9,7 +9,9 @@
     "build": "pnpm install --frozen-lockfile && node scripts/build.js",
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "clear-leads": "node scripts/clear-leads.js",
+    "migrate-username": "node scripts/migrate-email-to-username.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

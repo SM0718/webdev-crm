@@ -19,9 +19,19 @@ const schema = z.object({
   JWT_SECRET: z.string().min(8, 'JWT_SECRET must be at least 8 characters'),
   JWT_EXPIRES_IN: z.string().default('7d'),
 
+  /* Only read when the database has no admin yet. Once the account exists the
+     seed is skipped, so leaving these blank on a later deploy is harmless. */
   ADMIN_NAME: z.string().default('Admin'),
-  ADMIN_EMAIL: z.string().email(),
-  ADMIN_PASSWORD: z.string().min(8, 'ADMIN_PASSWORD must be at least 8 characters'),
+  ADMIN_USERNAME: z
+    .string()
+    .min(3, 'ADMIN_USERNAME must be at least 3 characters')
+    .max(30, 'ADMIN_USERNAME cannot exceed 30 characters')
+    .regex(/^[a-z0-9][a-z0-9._-]*$/i, 'ADMIN_USERNAME may use letters, numbers, dot, underscore and hyphen')
+    .optional(),
+  ADMIN_PASSWORD: z
+    .string()
+    .min(8, 'ADMIN_PASSWORD must be at least 8 characters')
+    .optional(),
 });
 
 const parsed = schema.safeParse(process.env);

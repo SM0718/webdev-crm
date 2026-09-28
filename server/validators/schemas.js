@@ -1,13 +1,30 @@
 import { z } from 'zod';
 
-import { LEAD_STATUSES, USER_ROLES } from '../constants.js';
+import {
+  LEAD_STATUSES,
+  USER_ROLES,
+  USERNAME_MAX,
+  USERNAME_MESSAGE,
+  USERNAME_MIN,
+  USERNAME_PATTERN,
+} from '../constants.js';
 
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, 'Not a valid id');
+
+/* --------------------------------------------------------------- username */
+
+export const usernameField = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(USERNAME_MIN, `Username must be at least ${USERNAME_MIN} characters`)
+  .max(USERNAME_MAX, `Username cannot exceed ${USERNAME_MAX} characters`)
+  .regex(USERNAME_PATTERN, USERNAME_MESSAGE);
 
 /* ------------------------------------------------------------------- auth */
 
 export const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().email('Enter a valid email address'),
+  username: usernameField,
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -80,7 +97,7 @@ export const updatePaymentSchema = z
 
 export const createMemberSchema = z.object({
   name: z.string().trim().min(2, 'Name must be at least 2 characters').max(80),
-  email: z.string().trim().toLowerCase().email('Enter a valid email address'),
+  username: usernameField,
   password: z.string().min(8, 'Password must be at least 8 characters').max(128),
   role: z.enum(USER_ROLES).default('member'),
 });

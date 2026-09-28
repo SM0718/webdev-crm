@@ -12,6 +12,15 @@ export const LEAD_STATUSES = [
   'Invalid Number',
 ];
 
+/**
+ * Login handle rules, mirroring server/constants.js - keep the two in sync.
+ */
+export const USERNAME_MIN = 3;
+export const USERNAME_MAX = 30;
+export const USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
+export const USERNAME_MESSAGE =
+  'Use 3-30 letters, numbers, dot, underscore or hyphen, starting with a letter or number';
+
 /** Tailwind-ish class per status so the table reads at a glance. */
 export const STATUS_VARIANTS = {
   New: 'muted',

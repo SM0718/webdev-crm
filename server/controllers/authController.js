@@ -11,13 +11,13 @@ export const hashPassword = (plain) => bcrypt.hash(plain, BCRYPT_ROUNDS);
 export const comparePassword = (plain, hash) => bcrypt.compare(plain, hash);
 
 export const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
-  const user = await User.findOne({ email }).select('+passwordHash');
+  const user = await User.findOne({ username }).select('+passwordHash');
 
   // Same generic message for "no such user" and "wrong password".
   if (!user || !(await comparePassword(password, user.passwordHash))) {
-    throw ApiError.unauthorized('Incorrect email or password.');
+    throw ApiError.unauthorized('Incorrect username or password.');
   }
   if (!user.isActive) {
     throw ApiError.forbidden('This account has been deactivated. Contact your admin.');
@@ -29,6 +29,29 @@ export const login = asyncHandler(async (req, res) => {
 export const me = asyncHandler(async (req, res) => {
   res.json({ success: true, user: req.user.toSafeJSON() });
 });
+
+/** The single admin, built from `.env`. */
+async function buildAdminDoc() {
+  const { ADMIN_NAME, ADMIN_USERNAME, ADMIN_PASSWORD } = env;
+  const missing = [
+    !ADMIN_USERNAME && 'ADMIN_USERNAME',
+    !ADMIN_PASSWORD && 'ADMIN_PASSWORD',
+  ].filter(Boolean);
+
+  if (missing.length) {
+    throw new Error(
+      `No admin account exists yet, so ${missing.join(' and ')} must be set to create the first one.`,
+    );
+  }
+
+  return User.create({
+    name: ADMIN_NAME,
+    username: ADMIN_USERNAME.toLowerCase(),
+    passwordHash: await hashPassword(ADMIN_PASSWORD),
+    role: 'admin',
+    isActive: true,
+  });
+}
 
 /**
  * Creates the single admin account from `.env`. Idempotent: safe to call on
@@ -45,15 +68,9 @@ export const seedAdmin = asyncHandler(async (req, res) => {
     });
   }
 
-  const created = await User.create({
-    name: env.ADMIN_NAME,
-    email: env.ADMIN_EMAIL.toLowerCase(),
-    passwordHash: await hashPassword(env.ADMIN_PASSWORD),
-    role: 'admin',
-    isActive: true,
-  });
+  const created = await buildAdminDoc();
 
-  console.log(`[seed] admin created for ${created.email}`);
+  console.log(`[seed] admin created for ${created.username}`);
   return res.status(201).json({ success: true, created: true, user: created.toSafeJSON() });
 });
 
@@ -61,17 +78,11 @@ export const seedAdmin = asyncHandler(async (req, res) => {
 export async function seedAdminOnBoot() {
   const existingAdmin = await User.findOne({ role: 'admin' });
   if (existingAdmin) {
-    console.log(`[seed] admin present: ${existingAdmin.email}`);
+    console.log(`[seed] admin present: ${existingAdmin.username}`);
     return;
   }
 
-  const created = await User.create({
-    name: env.ADMIN_NAME,
-    email: env.ADMIN_EMAIL.toLowerCase(),
-    passwordHash: await hashPassword(env.ADMIN_PASSWORD),
-    role: 'admin',
-    isActive: true,
-  });
+  const created = await buildAdminDoc();
 
-  console.log(`[seed] admin created for ${created.email}`);
+  console.log(`[seed] admin created for ${created.username}`);
 }

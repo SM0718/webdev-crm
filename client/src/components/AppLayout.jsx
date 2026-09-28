@@ -187,7 +187,7 @@ function UserPanel({ user, onLogout }) {
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs font-semibold">{user.name}</p>
           <p className="truncate text-[10px] text-muted-foreground">
-            {user.email}
+              {user.username}
           </p>
         </div>
         <Badge

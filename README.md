@@ -1,8 +1,3 @@
-# WebDev CRM — lead manager for a web development agency
-
-MERN app for cold outreach. An admin imports Claude lead-list PDFs, fixes the parsed rows, assigns them to
-team members, and tracks every call through a fixed set of statuses. Members only ever see their own leads.
-
 ```
 webdev-crm/
 ├── server/   Express + Mongoose API (JWT auth, PDF parser, analytics)
@@ -63,20 +58,20 @@ If `MONGODB_URI` is absent the server falls back to `MONGO_URI` (a plain `mongod
 
 ### Server environment
 
-| Variable | Purpose |
-| --- | --- |
-| `PORT` | API port (default `5000`) |
-| `NODE_ENV` | `development` (default), `test`, or `production` |
-| `MONGODB_URI` | Atlas cluster host (`mongodb+srv://…`), optional |
-| `MONGODB_USERNAME` / `MONGODB_PASSWORD` | Atlas credentials injected into `MONGODB_URI`, optional |
-| `MONGODB_DB` | Database name, default `webdev-crm` |
-| `MONGO_URI` | Fallback connection string used when `MONGODB_URI` is absent |
-| `JWT_SECRET` | Signing secret for access tokens (min. 8 chars) |
-| `JWT_EXPIRES_IN` | Token lifetime (default `7d`) |
-| `ADMIN_NAME` | Seeded admin display name |
-| `ADMIN_EMAIL` | Seeded admin email |
-| `ADMIN_PASSWORD` | Seeded admin password (min. 8 chars) |
-| `CLIENT_URL` | Comma-separated list of allowed CORS origins |
+| Variable                                | Purpose                                                      |
+| --------------------------------------- | ------------------------------------------------------------ |
+| `PORT`                                  | API port (default `5000`)                                    |
+| `NODE_ENV`                              | `development` (default), `test`, or `production`             |
+| `MONGODB_URI`                           | Atlas cluster host (`mongodb+srv://…`), optional             |
+| `MONGODB_USERNAME` / `MONGODB_PASSWORD` | Atlas credentials injected into `MONGODB_URI`, optional      |
+| `MONGODB_DB`                            | Database name, default `webdev-crm`                          |
+| `MONGO_URI`                             | Fallback connection string used when `MONGODB_URI` is absent |
+| `JWT_SECRET`                            | Signing secret for access tokens (min. 8 chars)              |
+| `JWT_EXPIRES_IN`                        | Token lifetime (default `7d`)                                |
+| `ADMIN_NAME`                            | Seeded admin display name                                    |
+| `ADMIN_EMAIL`                           | Seeded admin email                                           |
+| `ADMIN_PASSWORD`                        | Seeded admin password (min. 8 chars)                         |
+| `CLIENT_URL`                            | Comma-separated list of allowed CORS origins                 |
 
 The server refuses to start in `production` while `JWT_SECRET` still holds the example value. On boot it logs
 which variable supplied the connection string and redacts the password from that log line.
@@ -180,28 +175,28 @@ would be sent without an `Authorization` header.
 All routes except `/api/health` and `/api/auth/login` need `Authorization: Bearer <token>`. Everything under
 `/api/team` is admin-only.
 
-| Method | Route | Access | Purpose |
-| --- | --- | --- | --- |
-| GET | `/api/health` | public | Liveness check |
-| POST | `/api/auth/login` | public | Sign in |
-| GET | `/api/auth/me` | any | Current user |
-| POST | `/api/auth/seed-admin` | public | Idempotently re-seed the admin account |
-| GET | `/api/leads` | any | Filtered, paginated list (members are scoped to themselves) |
-| GET | `/api/leads/:id` | any | Single lead with its remark timeline |
-| POST | `/api/leads/parse-pdf` | admin | Parse a PDF into editable rows (nothing saved) |
-| POST | `/api/leads/bulk-save` | admin | Persist the reviewed rows |
-| POST | `/api/leads/assign-pdf` | admin | Upload a PDF and put every lead in it on one member's book |
-| PATCH | `/api/leads/bulk-assign` | admin | Assign or unassign many leads |
-| PATCH | `/api/leads/:id/status` | owner/admin | Change status, optionally with a remark |
-| POST | `/api/leads/:id/remarks` | owner/admin | Append a remark |
-| PATCH | `/api/leads/:id/payment` | admin | Set the advance and the amount paid to the salesman |
-| GET | `/api/leads/:id/pdf` | owner/admin | Download the lead as a PDF attachment |
-| DELETE | `/api/leads/:id` | admin | Delete a lead |
-| GET | `/api/analytics` (or `/api/leads/analytics`) | any | Stats scoped to the caller's role |
-| GET | `/api/team` | admin | Roster (admin + members) with per-member lead counts, status breakdown and headline pipeline counts |
-| POST | `/api/team` | admin | Add a member |
-| PATCH | `/api/team/:id/toggle` | admin | Deactivate / reactivate a member (leads are kept) |
-| PATCH | `/api/team/:id/password` | admin | Reset a member's password |
+| Method | Route                                        | Access      | Purpose                                                                                             |
+| ------ | -------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------- |
+| GET    | `/api/health`                                | public      | Liveness check                                                                                      |
+| POST   | `/api/auth/login`                            | public      | Sign in                                                                                             |
+| GET    | `/api/auth/me`                               | any         | Current user                                                                                        |
+| POST   | `/api/auth/seed-admin`                       | public      | Idempotently re-seed the admin account                                                              |
+| GET    | `/api/leads`                                 | any         | Filtered, paginated list (members are scoped to themselves)                                         |
+| GET    | `/api/leads/:id`                             | any         | Single lead with its remark timeline                                                                |
+| POST   | `/api/leads/parse-pdf`                       | admin       | Parse a PDF into editable rows (nothing saved)                                                      |
+| POST   | `/api/leads/bulk-save`                       | admin       | Persist the reviewed rows                                                                           |
+| POST   | `/api/leads/assign-pdf`                      | admin       | Upload a PDF and put every lead in it on one member's book                                          |
+| PATCH  | `/api/leads/bulk-assign`                     | admin       | Assign or unassign many leads                                                                       |
+| PATCH  | `/api/leads/:id/status`                      | owner/admin | Change status, optionally with a remark                                                             |
+| POST   | `/api/leads/:id/remarks`                     | owner/admin | Append a remark                                                                                     |
+| PATCH  | `/api/leads/:id/payment`                     | admin       | Set the advance and the amount paid to the salesman                                                 |
+| GET    | `/api/leads/:id/pdf`                         | owner/admin | Download the lead as a PDF attachment                                                               |
+| DELETE | `/api/leads/:id`                             | admin       | Delete a lead                                                                                       |
+| GET    | `/api/analytics` (or `/api/leads/analytics`) | any         | Stats scoped to the caller's role                                                                   |
+| GET    | `/api/team`                                  | admin       | Roster (admin + members) with per-member lead counts, status breakdown and headline pipeline counts |
+| POST   | `/api/team`                                  | admin       | Add a member                                                                                        |
+| PATCH  | `/api/team/:id/toggle`                       | admin       | Deactivate / reactivate a member (leads are kept)                                                   |
+| PATCH  | `/api/team/:id/password`                     | admin       | Reset a member's password                                                                           |
 
 ## Lead statuses
 
@@ -213,7 +208,7 @@ Both files must stay in sync when you change this list: `server/constants.js` an
 ## Deployment notes
 
 **Deploying the API to Render? Read [DEPLOYMENT.md](DEPLOYMENT.md) first** — it covers the one thing
-that breaks most Render deploys (there is no install step; the Build Command *is* the install), plus
+that breaks most Render deploys (there is no install step; the Build Command _is_ the install), plus
 port binding, CORS, and frontend wiring.
 
 - Serve `client/dist` from any static host and set `VITE_API_URL` to the public API origin before building.

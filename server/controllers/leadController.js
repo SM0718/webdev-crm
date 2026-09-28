@@ -150,7 +150,7 @@ export const listLeads = asyncHandler(async (req, res) => {
 
   const [leads, total] = await Promise.all([
     Lead.find(filter)
-      .populate('assignedTo', 'name email isActive role')
+      .populate('assignedTo', 'name username isActive role')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
@@ -166,7 +166,7 @@ export const listLeads = asyncHandler(async (req, res) => {
 });
 
 export const getLead = asyncHandler(async (req, res) => {
-  const lead = await Lead.findById(req.params.id).populate('assignedTo', 'name email isActive role').lean();
+  const lead = await Lead.findById(req.params.id).populate('assignedTo', 'name username isActive role').lean();
   if (!lead) throw ApiError.notFound('That lead no longer exists.');
 
   if (req.user.role === 'member' && String(lead.assignedTo?._id ?? lead.assignedTo) !== String(req.user._id)) {
@@ -179,7 +179,7 @@ export const getLead = asyncHandler(async (req, res) => {
 /* -------------------------------------------------- Per-lead PDF download */
 
 export const downloadLeadPdf = asyncHandler(async (req, res) => {
-  const lead = await Lead.findById(req.params.id).populate('assignedTo', 'name email isActive role').lean();
+  const lead = await Lead.findById(req.params.id).populate('assignedTo', 'name username isActive role').lean();
   if (!lead) throw ApiError.notFound('That lead no longer exists.');
 
   if (req.user.role === 'member' && String(lead.assignedTo?._id ?? lead.assignedTo) !== String(req.user._id)) {
@@ -410,7 +410,7 @@ export const analytics = asyncHandler(async (req, res) => {
       { $limit: 5 },
       { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'member' } },
       { $unwind: '$member' },
-      { $project: { _id: 0, name: '$member.name', email: '$member.email', count: 1 } },
+      { $project: { _id: 0, name: '$member.name', username: '$member.username', count: 1 } },
     ]),
     Lead.distinct('businessNiche', isMember ? { assignedTo: req.user._id } : {}),
     Lead.find(scope).sort({ createdAt: -1 }).limit(5).select('customerName businessNiche status googleRating websiteStatus').lean(),

@@ -8,13 +8,19 @@ import { Moon, Sun, DocumentText, ArrowRight, Warning2 } from 'iconsax-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { toMessage } from '@/lib/api';
+import { USERNAME_MAX, USERNAME_MESSAGE, USERNAME_MIN, USERNAME_PATTERN } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const schema = z.object({
-  email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
+  username: z
+    .string()
+    .trim()
+    .min(USERNAME_MIN, `Username must be at least ${USERNAME_MIN} characters`)
+    .max(USERNAME_MAX, `Username cannot exceed ${USERNAME_MAX} characters`)
+    .regex(USERNAME_PATTERN, USERNAME_MESSAGE),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -31,7 +37,7 @@ export default function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { username: '', password: '' },
   });
 
   const onSubmit = async (values) => {
@@ -96,16 +102,19 @@ export default function LoginPage() {
               )}
 
               <div className="space-y-1.5">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="you@agency.com"
-                  aria-invalid={Boolean(errors.email)}
-                  {...register('email')}
+                  id="username"
+                  type="text"
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  placeholder="priya.sharma"
+                  aria-invalid={Boolean(errors.username)}
+                  {...register('username')}
                 />
-                {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+                {errors.username && <p className="text-xs text-destructive">{errors.username.message}</p>}
               </div>
 
               <div className="space-y-1.5">
@@ -131,7 +140,7 @@ export default function LoginPage() {
 
         <p className="mt-5 text-center text-[11px] leading-relaxed text-muted-foreground">
           First run? The admin account is seeded from <code className="font-mono">server/.env</code>{' '}
-          (<span className="font-mono">ADMIN_EMAIL</span> / <span className="font-mono">ADMIN_PASSWORD</span>).
+          (<span className="font-mono">ADMIN_USERNAME</span> / <span className="font-mono">ADMIN_PASSWORD</span>).
         </p>
       </div>
     </div>
