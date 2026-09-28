@@ -46,7 +46,7 @@ export function toMessage(error, fallback = "Something went wrong.") {
       ? "The server took too long to respond."
       : null) ??
     (error?.message === "Network Error"
-      ? "Cannot reach the server. Is the API running on port 5000?"
+      ? "Cannot reach the API. Either it is down, or this site's URL is not in the server's CORS allow-list (CLIENT_URL). Check the browser console for a CORS error."
       : null) ??
     error?.message ??
     fallback
